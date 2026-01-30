@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MeetPlus | AI Meeting Analysis</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="min-h-screen bg-slate-950 text-slate-100 p-8">
+
+  <div class="max-w-4xl mx-auto">
+    <!-- HEADER -->
+    <div class="flex justify-between items-center mb-8">
+      <div>
+        <h1 class="text-3xl font-extrabold tracking-tight">
+          AI<span class="text-blue-500">.ANALYSIS</span>
+        </h1>
+        <p id="meetId" class="text-xs text-slate-400 mt-1 font-mono">
+          SESSION LOADING...
+        </p>
+      </div>
+
+      <button onclick="history.back()"
+        class="px-4 py-2 text-xs font-bold rounded-xl bg-white/5 hover:bg-white/10 border border-white/10">
+        ⬅ BACK
+      </button>
+    </div>
+
+    <!-- STATUS -->
+    <div id="status"
+      class="mb-6 p-4 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-400 text-sm">
+      🤖 AI is analyzing the meeting...
+    </div>
+
+    <!-- AI RESULT -->
+    <div id="aiBox"
+      class="hidden glass p-8 rounded-2xl bg-white/5 border border-white/10">
+      <h2 class="text-lg font-bold mb-4 text-blue-400">
+        Quantum Intelligence Summary
+      </h2>
+
+      <div id="aiContent"
+        class="prose prose-invert max-w-none text-sm">
+      </div>
+
+      <p id="modelUsed"
+        class="mt-6 text-[10px] text-slate-500 font-mono">
+      </p>
+    </div>
+  </div>
+
+<script>
+  app.get('/api/ai-report/:id', async (req, res) => {
+  try {
+    const meeting = await Meeting.findOne({
+      meetingId: { $regex: `^${req.params.id}$`, $options: "i" }
+    });
+
+    if (!meeting) {
+      return res.status(404).json({ error: "Meeting not found" });
+    }
+
+    const modelName = await getWorkingModel();
+    if (!modelName) throw new Error("No Gemini model available");
+
+    const prompt = `
+Analyze this meeting data:
+${JSON.stringify(meeting.participants || [])}
+
+Write a professional HTML report using <p> and <b>.
+Mention:
+• Engagement leader
+• Overall attention level
+• Emotional environment
+`;
+
+    const aiRes = await axios.post(
+      `https://generativelanguage.googleapis.com/v1beta/${modelName}:generateContent?key=${GEMINI_KEY}`,
+      { contents: [{ parts: [{ text: prompt }] }] }
+    );
+
+    const aiText =
+      aiRes.data?.candidates?.[0]?.content?.parts?.[0]?.text
+      || "<p><b>AI Insight:</b> Not enough participant data to analyze.</p>";
+
+    res.json({
+      modelUsed: modelName,
+      meeting,
+      aiAnalysis: aiText
+    });
+
+  } catch (err) {
+    console.error("🔥 AI ERROR:", err.response?.data || err.message);
+    res.status(500).json({
+      error: "AI analysis failed",
+      details: err.response?.data || err.message
+    });
+  }
+});
+
+</script>
+
+
+</body>
+</html>

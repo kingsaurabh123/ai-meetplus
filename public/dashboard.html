@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MeetPlus - The Future of Intelligence</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
+        
+        :root {
+            --primary: #3b82f6;
+            --accent: #8b5cf6;
+            --bg: #030712;
+        }
+
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg); 
+            color: white; 
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Futuristic Grid Background */
+        .grid-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            perspective: 1000px;
+            z-index: -1;
+        }
+
+        .grid-bg::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 50% 50%, transparent 0%, var(--bg) 80%);
+        }
+
+        /* Ultra Glass Cards */
+        .ultra-glass {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .ultra-glass::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+            transition: 0.5s;
+        }
+
+        .ultra-glass:hover::before {
+            left: 100%;
+        }
+
+        .ultra-glass:hover {
+            border-color: var(--primary);
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.15);
+            transform: scale(1.02) translateY(-5px);
+        }
+
+        /* Glowing Text */
+        .glow-text {
+            text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+
+        /* Neon Border Animation */
+        .neon-border {
+            position: relative;
+        }
+        
+        .neon-border::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 50%;
+            width: 0; height: 2px;
+            background: var(--primary);
+            box-shadow: 0 0 15px var(--primary);
+            transition: 0.4s ease;
+            transform: translateX(-50%);
+        }
+
+        .neon-border:hover::after {
+            width: 80%;
+        }
+
+        /* Action Icon Pulse */
+        .icon-box {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-pulse {
+            position: absolute;
+            width: 100%; height: 100%;
+            border-radius: inherit;
+            background: inherit;
+            opacity: 0.5;
+            animation: pulse-ring 2s infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% { transform: scale(1); opacity: 0.5; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .hero-title { font-size: 2.5rem !important; }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-10">
+
+    <div class="grid-bg" id="grid"></div>
+
+    <div class="max-w-6xl mx-auto">
+        <nav class="flex justify-between items-center mb-12 opacity-0" id="nav">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+                    <i class="fas fa-brain text-white"></i>
+                </div>
+                <h1 class="text-2xl font-extrabold tracking-tighter">MEET<span class="text-blue-500">PLUS</span><span class="text-[10px] ml-2 px-2 py-0.5 border border-blue-500/50 rounded-full text-blue-500">V2.0</span></h1>
+            </div>
+            <div class="flex items-center gap-6">
+                <div class="hidden md:block text-right">
+                    <span id="username" class="block font-bold text-sm glow-text"></span>
+                    <span class="text-[9px] uppercase tracking-widest text-gray-500">Pro Developer Mode</span>
+                </div>
+                <button onclick="logout()" class="group relative px-6 py-2 overflow-hidden rounded-full border border-red-500/30 text-red-500 text-xs font-black transition-all hover:text-white">
+                    <span class="relative z-10">LOGOUT</span>
+                    <div class="absolute inset-0 bg-red-600 translate-y-full group-hover:translate-y-0 transition-transform"></div>
+                </button>
+            </div>
+        </nav>
+
+        <header class="relative mb-16 opacity-0" id="hero">
+            <div class="grid md:grid-cols-2 gap-10 items-center">
+                <div>
+                    <h2 class="hero-title text-5xl md:text-7xl font-black mb-6 leading-none">
+                        HELLO, <br>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400" id="greet-name">CREATOR</span>
+                    </h2>
+                    <p class="text-gray-400 text-lg mb-8 max-w-md border-l-2 border-blue-500 pl-4">
+                        Aura level synchronization complete. Your intelligent workspace is ready for the next high-impact session.
+                    </p>
+                    <div class="flex gap-4">
+                        <div class="flex -space-x-3">
+                            <img src="https://i.pravatar.cc/100?u=1" class="w-8 h-8 rounded-full border-2 border-bg">
+                            <img src="https://i.pravatar.cc/100?u=2" class="w-8 h-8 rounded-full border-2 border-bg">
+                            <img src="https://i.pravatar.cc/100?u=3" class="w-8 h-8 rounded-full border-2 border-bg">
+                        </div>
+                        <span class="text-xs text-gray-500 font-bold flex items-center">Join 2.4k+ Teams Active Now</span>
+                    </div>
+                </div>
+                <div class="hidden md:flex justify-center relative">
+                    <div class="ultra-glass p-6 rounded-[2rem] w-64 h-64 flex flex-col items-center justify-center animate-bounce" style="animation-duration: 4s;">
+                        <i class="fas fa-video text-5xl text-blue-500 mb-4"></i>
+                        <div class="w-full bg-blue-500/20 h-2 rounded-full mb-2"></div>
+                        <div class="w-2/3 bg-blue-500/10 h-2 rounded-full"></div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-20 opacity-0" id="actions">
+            <div onclick="startMeeting()" class="ultra-glass p-10 rounded-[2.5rem] cursor-pointer group relative">
+                <div class="icon-box w-20 h-20 bg-blue-600 rounded-3xl mb-6 shadow-2xl shadow-blue-600/40">
+                    <div class="icon-pulse bg-blue-600"></div>
+                    <i class="fas fa-video-camera text-3xl text-white"></i>
+                </div>
+                <h3 class="text-3xl font-black mb-2 neon-border inline-block">Instant Meet</h3>
+                <p class="text-gray-500 font-medium">Generate a secure room with AI attention mapping.</p>
+                <div class="absolute top-6 right-8 text-blue-500/20 text-6xl font-black italic">NEW</div>
+            </div>
+
+            <div class="ultra-glass p-10 rounded-[2.5rem]">
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="w-12 h-12 bg-green-500/20 rounded-2xl flex items-center justify-center text-green-500">
+                        <i class="fas fa-key"></i>
+                    </div>
+                    <h3 class="text-2xl font-black">Secure Join</h3>
+                </div>
+                <div class="flex gap-3">
+                    <input id="join-input" type="text" placeholder="Access Code..." class="flex-1 bg-white/5 border border-white/10 p-4 rounded-2xl outline-none focus:border-blue-500 transition-all font-bold tracking-widest uppercase">
+                    <button onclick="joinMeeting()" class="bg-blue-600 hover:bg-blue-700 px-8 rounded-2xl font-black shadow-lg shadow-blue-600/20 transition-all active:scale-90">GO</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="opacity-0" id="history-sec">
+            <div class="flex items-center gap-4 mb-10">
+                <h4 class="text-xs font-black uppercase tracking-[0.5em] text-blue-500">Mission Logs</h4>
+                <div class="h-[1px] flex-1 bg-gradient-to-r from-blue-500/50 to-transparent"></div>
+            </div>
+            
+            <div id="history-list" class="grid grid-cols-1 gap-4">
+                <div class="flex flex-col items-center py-20 text-gray-600">
+                    <i class="fas fa-atom fa-spin text-4xl mb-4 text-blue-500"></i>
+                    <p class="font-bold tracking-widest text-[10px] uppercase">Decrypting History Archives...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const user = JSON.parse(localStorage.getItem('meet_user'));
+        if(!user) window.location.href = 'index.html';
+        
+        document.getElementById('username').innerText = user.name;
+        document.getElementById('greet-name').innerText = user.name.split(' ')[0] + '!';
+
+        // Advanced GSAP Entrance
+        window.addEventListener('DOMContentLoaded', () => {
+            const tl = gsap.timeline();
+            tl.to("#nav", { opacity: 1, y: 0, duration: 0.8, ease: "expo.out" })
+              .to("#hero", { opacity: 1, y: 0, duration: 1, ease: "expo.out" }, "-=0.5")
+              .to("#actions", { opacity: 1, y: 0, duration: 0.8, ease: "expo.out" }, "-=0.6")
+              .to("#history-sec", { opacity: 1, duration: 1 }, "-=0.4");
+        });
+
+        // Grid Background Parallax
+        document.addEventListener('mousemove', (e) => {
+            const x = e.clientX / window.innerWidth;
+            const y = e.clientY / window.innerHeight;
+            gsap.to("#grid", {
+                duration: 2,
+                x: x * 20,
+                y: y * 20,
+                rotationX: y * 5,
+                rotationY: -x * 5,
+                ease: "power2.out"
+            });
+        });
+
+        // Your existing Fetch Logic with New UI Design
+        fetch(`/api/history/${user.name}`).then(res => res.json()).then(data => {
+            const list = document.getElementById('history-list');
+            list.innerHTML = "";
+            if(data.length === 0) {
+                list.innerHTML = `<div class='ultra-glass p-20 rounded-[3rem] text-center text-gray-600'>NO DATA IN ARCHIVES</div>`;
+                return;
+            }
+
+            data.forEach((meet, index) => {
+                const date = new Date(meet.startTime).toLocaleDateString('en-US', { month: 'long', day: 'numeric'});
+                const totalAtt = meet.participants.reduce((sum, p) => sum + (p.avgAttention || 0), 0);
+                const avg = Math.round(totalAtt / (meet.participants.length || 1));
+
+                list.innerHTML += `
+                    <div class="ultra-glass p-6 md:p-8 rounded-[2rem] flex flex-wrap justify-between items-center group">
+                        <div class="flex items-center gap-6">
+                            <div class="text-4xl font-black text-white/5 group-hover:text-blue-500/20 transition-colors">0${index + 1}</div>
+                            <div>
+                                <h4 class="font-black text-white glow-text uppercase tracking-tighter text-xl">#${meet.meetingId}</h4>
+                                <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">${date} // ${meet.participants.length} USERS</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-10">
+                            <div class="hidden sm:block">
+                                <p class="text-[9px] font-black text-gray-600 uppercase mb-2">Attention Level</p>
+                                <div class="flex items-center gap-3">
+                                    <span class="text-sm font-black ${avg > 75 ? 'text-green-500' : 'text-blue-500'}">${avg}%</span>
+                                    <div class="w-32 h-1 bg-white/5 rounded-full overflow-hidden">
+                                        <div class="h-full bg-gradient-to-r from-blue-600 to-purple-600" style="width: ${avg}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <a href="report.html?id=${meet.meetingId}" class="w-14 h-14 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center hover:bg-blue-600 hover:border-blue-600 transition-all group-hover:rotate-12">
+                                <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                `;
+            });
+        });
+
+        // Meeting Logic
+        function startMeeting() {
+            const roomId = Math.random().toString(36).substring(2, 8);
+            localStorage.setItem('meet_role', 'host');
+            window.location.href = `meeting.html?room=${roomId}&host=true`;
+        }
+
+        function joinMeeting() {
+            const code = document.getElementById('join-input').value;
+            if(!code) return alert("CODE REQUIRED");
+            localStorage.setItem('meet_role', 'guest');
+            window.location.href = `meeting.html?room=${code}`;
+        }
+
+        function logout() { 
+            localStorage.removeItem('meet_user'); 
+            window.location.href = 'index.html'; 
+        }
+    </script>
+</body>
+</html>

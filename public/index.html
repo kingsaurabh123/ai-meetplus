@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MeetPlus - AI Intelligent Meetings</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
+
+        :root {
+            --primary: #3b82f6;
+            --accent: #a855f7;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #020617;
+            overflow-x: hidden;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Hero Background with Image & Overlay */
+        .bg-hero {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(to bottom, rgba(2, 6, 23, 0.8), rgba(2, 6, 23, 0.9)),
+                url('https://images.unsplash.com/photo-1635776062127-d379bfcba9f8?q=80&w=2000&auto=format&fit=crop'); /* Cinematic Abstract Mesh */
+            background-size: cover;
+            background-position: center;
+            z-index: -1;
+            transform: scale(1.1);
+        }
+
+        /* Glassmorphism Ultra */
+        .glass-container {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(25px) saturate(200%);
+            -webkit-backdrop-filter: blur(25px) saturate(200%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8);
+        }
+
+        /* Animated Input Glow */
+        .input-group input {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.4s ease;
+        }
+
+        .input-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Shimmering Button */
+        .btn-shine {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.5s ease;
+        }
+
+        .btn-shine::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            transform: rotate(45deg);
+            transition: 0.5s;
+        }
+
+        .btn-shine:hover::after {
+            left: 100%;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 480px) {
+            .glass-container {
+                margin: 20px;
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-hero" id="hero-bg"></div>
+
+    <div class="glass-container p-10 rounded-[2.5rem] w-full max-w-[420px] z-10 text-center opacity-0" id="login-card">
+        
+        <div class="relative inline-block mb-6">
+            <div class="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full blur opacity-75 animate-pulse"></div>
+            <div class="relative bg-black rounded-full p-4">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            </div>
+        </div>
+
+        <h1 class="text-4xl font-extrabold text-white mb-2 tracking-tight">Meet<span class="text-blue-500">Plus</span></h1>
+        <p class="text-blue-200/50 text-xs font-semibold tracking-[0.3em] uppercase mb-10">Intelligent Workspaces</p>
+
+        <div id="login-box" class="space-y-5">
+            <div class="input-group">
+                <input id="l-email" type="email" placeholder="Email Address" class="w-full p-4 rounded-2xl text-white outline-none">
+            </div>
+            <div class="input-group">
+                <input id="l-pass" type="password" placeholder="Password" class="w-full p-4 rounded-2xl text-white outline-none">
+            </div>
+            
+            <button onclick="auth('login')" class="btn-shine w-full bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-2xl font-bold text-lg shadow-2xl shadow-blue-500/20 active:scale-95">
+                Sign In
+            </button>
+            
+            <p class="text-gray-400 text-sm mt-6">
+                Don't have an account? 
+                <button onclick="toggle()" class="text-white font-bold hover:underline">Sign Up</button>
+            </p>
+        </div>
+
+        <div id="signup-box" class="hidden space-y-5">
+            <input id="s-name" type="text" placeholder="Full Name" class="w-full bg-black/30 border border-white/10 p-4 rounded-2xl text-white outline-none">
+            <input id="s-email" type="email" placeholder="Email Address" class="w-full bg-black/30 border border-white/10 p-4 rounded-2xl text-white outline-none">
+            <input id="s-pass" type="password" placeholder="Password" class="w-full bg-black/30 border border-white/10 p-4 rounded-2xl text-white outline-none">
+            
+            <button onclick="auth('signup')" class="btn-shine w-full bg-purple-600 hover:bg-purple-500 text-white py-4 rounded-2xl font-bold text-lg shadow-2xl shadow-purple-500/20 active:scale-95">
+                Create Account
+            </button>
+            
+            <p class="text-gray-400 text-sm mt-6">
+                Already member? 
+                <button onclick="toggle()" class="text-white font-bold hover:underline">Log In</button>
+            </p>
+        </div>
+
+        <div class="mt-10 flex items-center justify-center gap-2 text-gray-500">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M2.166 4.9L10 .303l7.834 4.597v4.442c0 5.148-3.346 9.873-7.834 11.358-4.488-1.485-7.834-6.21-7.834-11.358V4.9z" clip-rule="evenodd"></path></svg>
+            <span class="text-[10px] tracking-widest font-medium uppercase">End-to-End Encrypted</span>
+        </div>
+    </div>
+
+    <script>
+        // Entrance Animation
+        gsap.to("#login-card", { duration: 1.5, opacity: 1, y: 0, ease: "expo.out" });
+        gsap.to("#hero-bg", { duration: 20, scale: 1, repeat: -1, yoyo: true, ease: "sine.inOut" });
+
+        // Background movement based on mouse
+        document.addEventListener('mousemove', (e) => {
+            const moveX = (e.clientX - window.innerWidth/2) / 50;
+            const moveY = (e.clientY - window.innerHeight/2) / 50;
+            gsap.to("#hero-bg", { x: moveX, y: moveY, duration: 1 });
+        });
+
+        function toggle() {
+            const login = document.getElementById('login-box');
+            const signup = document.getElementById('signup-box');
+            
+            gsap.to(".glass-container", { duration: 0.4, rotateY: 360, ease: "power2.inOut" });
+
+            setTimeout(() => {
+                login.classList.toggle('hidden');
+                signup.classList.toggle('hidden');
+            }, 200);
+        }
+
+        async function auth(type) {
+            // Humne aapki logic functionality ko touch nahi kiya hai
+            const endpoint = type === 'login' ? '/api/login' : '/api/signup';
+            const payload = type === 'login' 
+                ? { email: document.getElementById('l-email').value, password: document.getElementById('l-pass').value }
+                : { name: document.getElementById('s-name').value, email: document.getElementById('s-email').value, password: document.getElementById('s-pass').value };
+
+            try {
+                const res = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+
+                if(data.success) {
+                    localStorage.setItem('meet_user', JSON.stringify(data.user));
+                    window.location.href = 'dashboard.html';
+                } else {
+                    alert(data.error || "Authentication Failed");
+                }
+            } catch(e) { console.error(e); alert("Server Error"); }
+        }
+    </script>
+</body>
+</html>
