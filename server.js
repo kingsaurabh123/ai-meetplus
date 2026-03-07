@@ -8,7 +8,7 @@ const cors = require('cors');
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static('index.html')); 
+app.use(express.static('public')); 
 
 // PeerJS Server
 const peerServer = ExpressPeerServer(server, { debug: true });
