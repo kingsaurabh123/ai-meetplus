@@ -3,199 +3,824 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MeetPlus - AI Intelligent Meetings</title>
+    <title>MeetPlus — India's first AI-native meeting scheduler</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
 
         :root {
-            --primary: #3b82f6;
-            --accent: #a855f7;
+            --ink: #0A0E1A;
+            --ink-2: #121A2B;
+            --ivory: #FAF8F4;
+            --paper: #F0ECE3;
+            --brass: #B8925A;
+            --brass-deep: #93713F;
+            --brass-soft: rgba(184, 146, 90, 0.14);
+            --ink-text: #1B2333;
+            --steel: #6E7686;
+            --line-dark: rgba(255, 255, 255, 0.09);
+            --line-light: rgba(27, 35, 51, 0.12);
         }
 
-        body {
-            font-family: 'Outfit', sans-serif;
-            background: #020617;
-            overflow-x: hidden;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        html, body { margin: 0; font-family: 'IBM Plex Sans', sans-serif; background: var(--ivory); color: var(--ink-text); overflow-x: hidden; }
+        .serif { font-family: 'Source Serif 4', serif; }
+        img { max-width: 100%; }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
         }
 
-        /* Hero Background with Image & Overlay */
-        .bg-hero {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
-                linear-gradient(to bottom, rgba(2, 6, 23, 0.8), rgba(2, 6, 23, 0.9)),
-                url('https://images.unsplash.com/photo-1635776062127-d379bfcba9f8?q=80&w=2000&auto=format&fit=crop'); /* Cinematic Abstract Mesh */
-            background-size: cover;
-            background-position: center;
-            z-index: -1;
-            transform: scale(1.1);
+        /* ============ shared bits ============ */
+        .mp-eyebrow {
+            display: inline-flex; align-items: center; gap: 8px;
+            font-size: 0.82rem; color: var(--brass-deep); background: var(--brass-soft);
+            border: 1px solid rgba(184, 146, 90, 0.3); padding: 6px 13px; border-radius: 100px;
+        }
+        .mp-eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--brass); flex-shrink: 0; }
+        .mp-wrap { max-width: 1180px; margin: 0 auto; padding: 0 4vw; }
+        section { position: relative; }
+
+        /* ============ nav ============ */
+        .mp-nav {
+            position: sticky; top: 0; z-index: 50;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 4vw;
+            background: rgba(250, 248, 244, 0.86);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--line-light);
+        }
+        .mp-nav-brand { display: flex; align-items: center; gap: 10px; }
+        .mp-nav-brand span { font-family: 'Source Serif 4', serif; font-size: 1.05rem; color: var(--ink-text); }
+        .mp-nav-links { display: flex; align-items: center; gap: 30px; }
+        .mp-nav-links a { color: var(--steel); text-decoration: none; font-size: 0.9rem; transition: color 0.2s ease; }
+        .mp-nav-links a:hover, .mp-nav-links a:focus-visible { color: var(--ink-text); }
+        .mp-nav-cta {
+            background: var(--ink); color: var(--ivory); padding: 9px 18px;
+            border-radius: 7px; font-size: 0.88rem; font-weight: 500; text-decoration: none !important;
+            transition: background 0.2s ease;
+        }
+        .mp-nav-cta:hover { background: var(--ink-2); color: var(--ivory) !important; }
+        @media (max-width: 760px) { .mp-nav-links a:not(.mp-nav-cta) { display: none; } }
+
+        /* ============ hero ============ */
+        .mp-hero {
+            padding: clamp(28px, 8vw, 90px) 4vw clamp(40px, 6vw, 70px);
+            display: grid; grid-template-columns: 1.05fr 0.95fr; gap: clamp(28px, 4vw, 60px);
+            align-items: center; overflow: hidden;
+        }
+        .mp-hero::before {
+            content: ''; position: absolute; inset: 0; z-index: -1;
+            background: radial-gradient(700px 500px at 90% 10%, var(--brass-soft), transparent 60%);
+        }
+        .mp-hero h1 {
+            font-weight: 500; font-size: clamp(2.1rem, 4.6vw, 4rem); line-height: 1.08; letter-spacing: -0.01em;
+            color: var(--ink-text); max-width: 13ch; margin: 20px 0 18px;
+        }
+        .mp-hero p.lede { font-size: 1.04rem; line-height: 1.65; color: var(--steel); max-width: 42ch; margin: 0 0 30px; }
+        .mp-hero-ctas { display: flex; gap: 14px; flex-wrap: wrap; }
+        .mp-btn-dark {
+            background: var(--ink); color: var(--ivory) !important; padding: 13px 24px; border-radius: 8px;
+            font-weight: 500; font-size: 0.92rem; text-decoration: none !important; display: inline-block;
+            transition: background 0.2s ease;
+        }
+        .mp-btn-dark:hover { background: var(--ink-2); }
+        .mp-btn-ghost {
+            border: 1px solid var(--line-light); color: var(--ink-text) !important; padding: 13px 24px; border-radius: 8px;
+            font-weight: 500; font-size: 0.92rem; text-decoration: none !important; display: inline-block;
+            transition: border-color 0.2s ease, background 0.2s ease;
+        }
+        .mp-btn-ghost:hover { border-color: var(--brass); background: #fff; }
+
+        /* ---- hero carousel ---- */
+        .mp-carousel {
+            position: relative; width: 100%; aspect-ratio: 4 / 5; max-width: 440px; margin: 0 auto;
+            border-radius: 20px; overflow: hidden; background: var(--ink);
+            box-shadow: 0 40px 80px -30px rgba(10, 14, 26, 0.45);
+        }
+        .mp-carousel-track { position: absolute; inset: 0; }
+        .mp-slide {
+            position: absolute; inset: 0; opacity: 0; transition: opacity 0.9s ease;
+        }
+        .mp-slide.active { opacity: 1; }
+        .mp-slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .mp-slide::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(180deg, rgba(10,14,26,0) 45%, rgba(10,14,26,0.85) 100%);
+        }
+        .mp-slide-caption {
+            position: absolute; left: 20px; right: 20px; bottom: 18px; z-index: 2; color: #F5F3EE;
+        }
+        .mp-slide-caption .city { font-family: 'Source Serif 4', serif; font-size: 1.15rem; }
+        .mp-slide-caption .meta { font-size: 0.8rem; color: #C9CDD6; margin-top: 4px; display: flex; align-items: center; gap: 8px; }
+        .mp-slide-caption .meta .pip { width: 6px; height: 6px; border-radius: 50%; background: var(--brass); display: inline-block; }
+        .mp-carousel-dots {
+            position: absolute; top: 16px; right: 16px; z-index: 2; display: flex; gap: 6px;
+        }
+        .mp-carousel-dots button {
+            width: 18px; height: 3px; border-radius: 2px; border: none; padding: 0; cursor: pointer;
+            background: rgba(255,255,255,0.35); transition: background 0.2s ease;
+        }
+        .mp-carousel-dots button.active { background: #fff; }
+        .mp-carousel-badge {
+            position: absolute; top: 16px; left: 16px; z-index: 2;
+            background: rgba(10,14,26,0.55); backdrop-filter: blur(6px); color: #F5F3EE;
+            font-size: 0.72rem; padding: 6px 11px; border-radius: 100px; display: flex; align-items: center; gap: 6px;
+        }
+        .mp-carousel-badge .pip { width: 6px; height: 6px; border-radius: 50%; background: #6FCF97; }
+
+        @media (max-width: 860px) {
+            .mp-hero { grid-template-columns: 1fr; text-align: left; padding-top: 24px; }
+            .mp-hero h1 { max-width: none; }
+            .mp-hero p.lede { max-width: none; }
+            .mp-carousel { max-width: 340px; order: -1; margin-bottom: 8px; }
         }
 
-        /* Glassmorphism Ultra */
-        .glass-container {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(25px) saturate(200%);
-            -webkit-backdrop-filter: blur(25px) saturate(200%);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8);
+        /* ============ stats ============ */
+        .mp-stats { border-top: 1px solid var(--line-light); border-bottom: 1px solid var(--line-light); padding: 40px 4vw; }
+        .mp-stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px; max-width: 1180px; margin: 0 auto; }
+        .mp-stat { text-align: left; border-left: 1px solid var(--line-light); padding-left: 20px; }
+        .mp-stat:first-child { border-left: none; padding-left: 0; }
+        @media (max-width: 760px) { .mp-stats-row { grid-template-columns: repeat(2, 1fr); row-gap: 24px; } .mp-stat:nth-child(odd) { border-left: none; padding-left: 0; } }
+        @media (max-width: 460px) { .mp-stats-row { grid-template-columns: 1fr; } .mp-stat { border-left: none; padding-left: 0; } }
+        .mp-stat .num { font-family: 'Source Serif 4', serif; font-size: clamp(1.7rem, 3vw, 2.4rem); color: var(--ink-text); }
+        .mp-stat .lbl { font-size: 0.84rem; color: var(--steel); margin-top: 4px; }
+
+        /* ============ generic section spacing ============ */
+        .mp-section { padding: clamp(48px, 8vw, 96px) 4vw; }
+        .mp-section-head { max-width: 46ch; margin-bottom: clamp(28px, 4vw, 48px); }
+        .mp-section-head h2 { font-family: 'Source Serif 4', serif; font-weight: 500; font-size: clamp(1.6rem, 2.8vw, 2.3rem); margin: 12px 0 12px; color: var(--ink-text); }
+        .mp-section-head p { color: var(--steel); font-size: 0.98rem; line-height: 1.6; margin: 0; }
+
+        /* ============ how it works ============ */
+        .mp-steps { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+        .mp-steps::before { content: ''; position: absolute; top: 26px; left: 8%; right: 8%; height: 1px; background: var(--line-light); }
+        .mp-step { position: relative; background: #fff; border: 1px solid var(--line-light); border-radius: 12px; padding: 26px 22px; }
+        .mp-step .idx {
+            width: 30px; height: 30px; border-radius: 50%; background: var(--ink); color: var(--ivory);
+            display: flex; align-items: center; justify-content: center; font-size: 0.82rem; margin-bottom: 18px; position: relative; z-index: 1;
+        }
+        .mp-step h3 { font-size: 1.02rem; font-weight: 600; margin: 0 0 8px; color: var(--ink-text); }
+        .mp-step p { font-size: 0.88rem; color: var(--steel); line-height: 1.55; margin: 0; }
+        @media (max-width: 760px) { .mp-steps { grid-template-columns: 1fr; } .mp-steps::before { display: none; } }
+
+        /* ============ 3D mockup ============ */
+        .mp-mockup { padding: clamp(24px,4vw,40px) 4vw clamp(56px,8vw,96px); display: grid; grid-template-columns: 0.9fr 1.1fr; gap: clamp(28px,5vw,80px); align-items: center; }
+        .mp-mockup-stage { perspective: 1600px; }
+        .mp-device {
+            transform-style: preserve-3d; transform: rotateX(8deg) rotateY(-14deg);
+            background: var(--ink); border-radius: 16px; padding: 14px;
+            box-shadow: 0 50px 90px -30px rgba(10,14,26,0.5); transition: transform 0.1s linear; max-width: 380px; margin: 0 auto;
+        }
+        .mp-device-screen { background: var(--ivory); border-radius: 8px; padding: 18px; min-height: 260px; }
+        .mp-device-bar { display: flex; gap: 6px; margin-bottom: 14px; }
+        .mp-device-bar span { width: 8px; height: 8px; border-radius: 50%; background: var(--line-light); }
+        .mp-fauxrow { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line-light); }
+        .mp-fauxrow:last-child { border-bottom: none; }
+        .mp-fauxrow .chip { width: 40px; font-size: 0.7rem; color: var(--brass-deep); font-variant-numeric: tabular-nums; }
+        .mp-fauxrow .bar { height: 8px; border-radius: 4px; background: var(--paper); flex: 1; }
+        .mp-fauxrow .bar.on { background: var(--brass); opacity: 0.85; }
+        .mp-mockup-copy p.lede { color: var(--steel); font-size: 1rem; line-height: 1.65; max-width: 40ch; }
+        .mp-mockup-list { list-style: none; padding: 0; margin: 22px 0 0; display: grid; gap: 14px; }
+        .mp-mockup-list li { display: flex; gap: 12px; font-size: 0.92rem; color: var(--ink-text); }
+        .mp-mockup-list li::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--brass); margin-top: 8px; flex-shrink: 0; }
+        @media (max-width: 860px) { .mp-mockup { grid-template-columns: 1fr; } }
+
+        /* ============ feature flip cards ============ */
+        .mp-features { background: var(--paper); }
+        .mp-feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .mp-flip { perspective: 1200px; height: 220px; cursor: pointer; }
+        .mp-flip-inner { position: relative; width: 100%; height: 100%; transition: transform 0.6s cubic-bezier(0.4,0,0.2,1); transform-style: preserve-3d; }
+        .mp-flip.is-flipped .mp-flip-inner { transform: rotateY(180deg); }
+        .mp-flip-face { position: absolute; inset: 0; backface-visibility: hidden; border-radius: 12px; padding: 22px; display: flex; flex-direction: column; justify-content: space-between; }
+        .mp-flip-front { background: #fff; border: 1px solid var(--line-light); }
+        .mp-flip-back { background: var(--ink); color: var(--ivory); transform: rotateY(180deg); }
+        .mp-flip-front h3 { font-size: 1rem; font-weight: 600; margin: 0; color: var(--ink-text); }
+        .mp-flip-front .tap { font-size: 0.78rem; color: var(--steel); }
+        .mp-flip-back p { font-size: 0.86rem; line-height: 1.55; color: #C9CDD6; margin: 0; }
+        .mp-flip-back .lbl { font-size: 0.76rem; color: var(--brass); margin-bottom: 8px; }
+        @media (max-width: 860px) { .mp-feature-grid { grid-template-columns: 1fr 1fr; } .mp-flip { height: 240px; } }
+        @media (max-width: 560px) { .mp-feature-grid { grid-template-columns: 1fr; } .mp-flip { height: 190px; } }
+
+        /* ============ testimonials ============ */
+        .mp-testi-stage { position: relative; max-width: 720px; margin: 0 auto; min-height: 170px; }
+        .mp-testi-slide { position: absolute; inset: 0; opacity: 0; pointer-events: none; text-align: center; }
+        .mp-testi-slide.active { position: relative; opacity: 1; pointer-events: auto; }
+        .mp-testi-slide q { font-family: 'Source Serif 4', serif; font-size: clamp(1.05rem, 2vw, 1.4rem); line-height: 1.5; color: var(--ink-text); display: block; margin-bottom: 16px; }
+        .mp-testi-who { font-size: 0.86rem; color: var(--steel); }
+        .mp-testi-who b { color: var(--ink-text); font-weight: 500; }
+        .mp-testi-dots { display: flex; justify-content: center; gap: 8px; margin-top: 24px; }
+        .mp-testi-dots button { width: 7px; height: 7px; border-radius: 50%; border: none; background: var(--line-light); cursor: pointer; padding: 0; }
+        .mp-testi-dots button.active { background: var(--brass); width: 20px; border-radius: 4px; transition: width 0.25s ease; }
+
+        /* ============ global clocks ============ */
+        .mp-global-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1px; background: var(--line-light); border: 1px solid var(--line-light); border-radius: 12px; overflow: hidden; }
+        .mp-city { background: #fff; padding: 18px 12px; text-align: center; }
+        .mp-city .name { font-size: 0.8rem; color: var(--steel); margin-bottom: 8px; }
+        .mp-city .time { font-variant-numeric: tabular-nums; font-family: 'Source Serif 4', serif; font-size: 1.15rem; color: var(--ink-text); }
+        @media (max-width: 860px) { .mp-global-grid { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 480px) { .mp-global-grid { grid-template-columns: repeat(2, 1fr); } }
+
+        /* ============ photo strip ============ */
+        .mp-photo-grid { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 16px; height: 340px; }
+        .mp-photo-grid figure { margin: 0; position: relative; border-radius: 12px; overflow: hidden; background: var(--paper); }
+        .mp-photo-grid img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.6s ease; }
+        .mp-photo-grid figure:hover img { transform: scale(1.05); }
+        .mp-photo-grid figcaption { position: absolute; left: 14px; bottom: 12px; color: #fff; font-size: 0.8rem; text-shadow: 0 1px 6px rgba(0,0,0,0.5); }
+        @media (max-width: 760px) { .mp-photo-grid { grid-template-columns: 1fr; height: auto; } .mp-photo-grid figure { height: 200px; } }
+
+        /* ============ cta band ============ */
+        .mp-cta-band {
+            margin: 0 4vw clamp(48px,6vw,80px); background: var(--ink); border-radius: 18px; padding: clamp(30px,5vw,56px);
+            display: flex; align-items: center; justify-content: space-between; gap: 30px; flex-wrap: wrap; color: var(--ivory);
+        }
+        .mp-cta-band h2 { font-family: 'Source Serif 4', serif; font-weight: 500; font-size: clamp(1.4rem, 2.6vw, 2rem); margin: 0; max-width: 16ch; }
+        .mp-cta-band p { color: #A9AFBD; margin: 10px 0 0; max-width: 40ch; font-size: 0.94rem; }
+
+        /* ============ auth card ============ */
+        .mp-auth-section { background: var(--paper); padding: clamp(48px,8vw,96px) 4vw; }
+        .mp-auth-card {
+            max-width: 920px; margin: 0 auto; background: var(--ivory); border-radius: 20px; overflow: hidden;
+            box-shadow: 0 40px 80px -40px rgba(10,14,26,0.35);
+            display: grid; grid-template-columns: 0.85fr 1fr;
+        }
+        .brand-panel { position: relative; background: var(--ink); color: #E9E7E0; padding: clamp(28px,3vw,44px); display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; }
+        .brand-panel::before { content: ''; position: absolute; inset: 0; background: radial-gradient(500px 360px at 90% -10%, rgba(184, 146, 90, 0.18), transparent 60%), linear-gradient(180deg, var(--ink) 0%, var(--ink-2) 100%); z-index: 0; }
+        .brand-panel > * { position: relative; z-index: 1; }
+        .mark { width: 30px; height: 30px; flex-shrink: 0; }
+        .wordmark { font-family: 'Source Serif 4', serif; font-size: 1.02rem; letter-spacing: 0.01em; color: #F2F0EA; }
+        .brand-head h1 { font-family: 'Source Serif 4', serif; font-weight: 500; font-size: clamp(1.5rem, 2.4vw, 2rem); line-height: 1.15; letter-spacing: -0.01em; color: #F5F3EE; margin: 0 0 14px; }
+        .brand-head p { font-size: 0.92rem; line-height: 1.6; color: #A9AFBD; margin: 0; }
+        .agenda { margin-top: 32px; border-top: 1px solid var(--line-dark); padding-top: 18px; }
+        .agenda-label { font-size: 0.76rem; color: #8B93A3; margin: 0 0 14px; }
+        .agenda-row { display: flex; align-items: baseline; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line-dark); }
+        .agenda-row:last-child { border-bottom: none; }
+        .agenda-time { font-variant-numeric: tabular-nums; font-size: 0.84rem; color: var(--brass); width: 48px; flex-shrink: 0; }
+        .agenda-title { font-size: 0.86rem; color: #DCD9D1; flex: 1; }
+        .agenda-city { font-size: 0.76rem; color: #7B8291; }
+        .brand-foot { display: flex; align-items: center; gap: 10px; padding-top: 22px; border-top: 1px solid var(--line-dark); margin-top: 24px; }
+        .brand-foot span { font-size: 0.78rem; color: #8B93A3; line-height: 1.5; }
+
+        .form-panel { display: flex; align-items: center; justify-content: center; padding: clamp(28px,4vw,48px); background: var(--ivory); }
+        .form-wrap { width: 100%; max-width: 360px; opacity: 0; }
+        .tabs { display: flex; gap: 26px; border-bottom: 1px solid var(--line-light); margin-bottom: 26px; position: relative; }
+        .tab-btn { background: none; border: none; padding: 0 0 12px; font-family: 'IBM Plex Sans', sans-serif; font-size: 0.94rem; font-weight: 500; color: var(--steel); cursor: pointer; transition: color 0.25s ease; }
+        .tab-btn.active { color: var(--ink-text); }
+        .tab-indicator { position: absolute; bottom: -1px; height: 2px; background: var(--brass); transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), width 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
+        .field-label { display: block; font-size: 0.83rem; color: var(--ink-text); margin: 0 0 7px; }
+        .field { width: 100%; padding: 12px 13px; border-radius: 8px; border: 1px solid var(--line-light); background: #fff; color: var(--ink-text); font-family: 'IBM Plex Sans', sans-serif; font-size: 0.9rem; outline: none; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+        .field::placeholder { color: #A7ACB6; }
+        .field:focus, .btn-primary:focus-visible, .btn-google:focus-visible, .tab-btn:focus-visible { border-color: var(--brass); box-shadow: 0 0 0 3px rgba(184, 146, 90, 0.14); }
+        .field-group { margin-bottom: 15px; }
+        .btn-primary { width: 100%; padding: 13px 14px; border-radius: 8px; border: none; background: var(--ink); color: #F5F3EE; font-family: 'IBM Plex Sans', sans-serif; font-weight: 500; font-size: 0.92rem; cursor: pointer; transition: background 0.2s ease, transform 0.15s ease; }
+        .btn-primary:hover { background: var(--ink-2); }
+        .btn-primary:active { transform: scale(0.985); }
+        .btn-google { width: 100%; padding: 11.5px 14px; border-radius: 8px; border: 1px solid var(--line-light); background: #fff; color: var(--ink-text); font-family: 'IBM Plex Sans', sans-serif; font-weight: 500; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: border-color 0.2s ease, background 0.2s ease; }
+        .btn-google:hover { border-color: #C9CDD6; background: #FBFAF8; }
+        .divider { display: flex; align-items: center; gap: 14px; margin: 18px 0; }
+        .divider .line { flex: 1; height: 1px; background: var(--line-light); }
+        .divider span { font-size: 0.78rem; color: var(--steel); }
+        .switch-line { margin-top: 20px; font-size: 0.86rem; color: var(--steel); text-align: center; }
+        .switch-line button { background: none; border: none; padding: 0; color: var(--brass-deep); font-weight: 500; font-size: 0.86rem; cursor: pointer; }
+        .switch-line button:hover { text-decoration: underline; }
+        .pane { display: none; }
+        .pane.active { display: block; }
+
+        @media (max-width: 760px) {
+            .mp-auth-card { grid-template-columns: 1fr; }
+            .agenda { display: none; }
         }
 
-        /* Animated Input Glow */
-        .input-group input {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.4s ease;
-        }
-
-        .input-group input:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
-            transform: translateY(-2px);
-        }
-
-        /* Shimmering Button */
-        .btn-shine {
-            position: relative;
-            overflow: hidden;
-            transition: all 0.5s ease;
-        }
-
-        .btn-shine::after {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
-            transform: rotate(45deg);
-            transition: 0.5s;
-        }
-
-        .btn-shine:hover::after {
-            left: 100%;
-        }
-
-        /* Responsive Adjustments */
-        @media (max-width: 480px) {
-            .glass-container {
-                margin: 20px;
-                padding: 30px 20px;
-            }
-        }
+        /* ============ footer ============ */
+        .mp-footer { padding: 28px 4vw 40px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line-light); flex-wrap: wrap; gap: 12px; }
+        .mp-footer span { font-size: 0.82rem; color: var(--steel); }
     </style>
 </head>
 <body>
 
-    <div class="bg-hero" id="hero-bg"></div>
+    <!-- ============ NAV ============ -->
+    <nav class="mp-nav">
+        <div class="mp-nav-brand">
+            <svg class="mark" width="26" height="26" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="17" cy="17" r="16" stroke="#B8925A" stroke-width="1.2"/>
+                <path d="M9 17L17 9L25 17L17 25L9 17Z" stroke="#1B2333" stroke-width="1.2"/>
+                <circle cx="17" cy="17" r="2.2" fill="#B8925A"/>
+            </svg>
+            <span>MeetPlus</span>
+        </div>
+        <div class="mp-nav-links">
+            <a href="#how">How it works</a>
+            <a href="#features">Features</a>
+            <a href="#global">Global</a>
+            <a href="#auth" class="mp-nav-cta">Sign in</a>
+        </div>
+    </nav>
 
-    <div class="glass-container p-10 rounded-[2.5rem] w-full max-w-[420px] z-10 text-center opacity-0" id="login-card">
-        
-        <div class="relative inline-block mb-6">
-            <div class="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full blur opacity-75 animate-pulse"></div>
-            <div class="relative bg-black rounded-full p-4">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+    <!-- ============ HERO ============ -->
+    <section class="mp-hero" id="hero">
+        <div>
+            <span class="mp-eyebrow"><span class="dot"></span>India's first AI-native meeting scheduler</span>
+            <h1 class="serif" id="hero-h1">A time that works for everyone, found automatically.</h1>
+            <p class="lede">MeetPlus reads every calendar in the room, weighs each person's working hours against theirs, and proposes the one slot that costs the fewest people sleep — then briefs the whole group before anyone sits down.</p>
+            <div class="mp-hero-ctas">
+                <a href="#auth" class="mp-btn-dark">Get started free</a>
+                <a href="#how" class="mp-btn-ghost">See how it works</a>
             </div>
         </div>
 
-        <h1 class="text-4xl font-extrabold text-white mb-2 tracking-tight">Meet<span class="text-blue-500">Plus</span></h1>
-        <p class="text-blue-200/50 text-xs font-semibold tracking-[0.3em] uppercase mb-10">Intelligent Workspaces</p>
+        <div class="mp-carousel" id="hero-carousel">
+            <div class="mp-carousel-badge"><span class="pip"></span>Live scheduling</div>
+            <div class="mp-carousel-dots" id="carousel-dots"></div>
+            <div class="mp-carousel-track" id="carousel-track"></div>
+        </div>
+    </section>
 
-        <div id="login-box" class="space-y-5">
-            <div class="input-group">
-                <input id="l-email" type="email" placeholder="Email Address" class="w-full p-4 rounded-2xl text-white outline-none">
+    <!-- ============ STATS ============ -->
+    <section class="mp-stats">
+        <div class="mp-stats-row">
+            <div class="mp-stat"><div class="num" data-count="42000">0</div><div class="lbl">meetings resolved across time zones</div></div>
+            <div class="mp-stat"><div class="num" data-count="180">0</div><div class="lbl">cities with live working-hour data</div></div>
+            <div class="mp-stat"><div class="num" data-count="9" data-suffix=" min">0</div><div class="lbl">average time to a confirmed slot</div></div>
+            <div class="mp-stat"><div class="num" data-count="96" data-suffix="%">0</div><div class="lbl">first-proposal acceptance rate</div></div>
+        </div>
+    </section>
+
+    <!-- ============ HOW IT WORKS ============ -->
+    <section class="mp-section" id="how">
+        <div class="mp-section-head">
+            <span class="mp-eyebrow"><span class="dot"></span>Process</span>
+            <h2 class="serif">Three steps, no back-and-forth</h2>
+            <p>Most scheduling tools show you free slots. MeetPlus decides which slot is actually fair, then handles everything downstream of that decision.</p>
+        </div>
+        <div class="mp-steps">
+            <div class="mp-step"><div class="idx">1</div><h3>Connect your calendars</h3><p>Google, Outlook or both — MeetPlus watches availability and time zones for everyone on the invite, not just you.</p></div>
+            <div class="mp-step"><div class="idx">2</div><h3>The AI proposes a time</h3><p>It scores every open slot against each attendee's working hours and picks the one with the lowest total inconvenience.</p></div>
+            <div class="mp-step"><div class="idx">3</div><h3>Everyone gets a brief</h3><p>Agenda, local time and dial-in land in each person's inbox in their own time zone — automatically, before the meeting starts.</p></div>
+        </div>
+    </section>
+
+    <!-- ============ 3D MOCKUP ============ -->
+    <section class="mp-mockup">
+        <div class="mp-mockup-stage">
+            <div class="mp-device" id="device">
+                <div class="mp-device-screen">
+                    <div class="mp-device-bar"><span></span><span></span><span></span></div>
+                    <div class="mp-fauxrow"><span class="chip">09:00</span><div class="bar on"></div></div>
+                    <div class="mp-fauxrow"><span class="chip">13:30</span><div class="bar"></div></div>
+                    <div class="mp-fauxrow"><span class="chip">17:00</span><div class="bar on"></div></div>
+                    <div class="mp-fauxrow"><span class="chip">21:00</span><div class="bar"></div></div>
+                    <div class="mp-fauxrow"><span class="chip">23:30</span><div class="bar"></div></div>
+                </div>
             </div>
-            <div class="input-group">
-                <input id="l-pass" type="password" placeholder="Password" class="w-full p-4 rounded-2xl text-white outline-none">
+        </div>
+        <div class="mp-mockup-copy">
+            <span class="mp-eyebrow"><span class="dot"></span>Inside the scheduler</span>
+            <h2 class="serif" style="font-size:clamp(1.4rem,2.6vw,2rem); margin:16px 0;">One board, every attendee's day laid out honestly</h2>
+            <p class="lede">Tilt it, scroll past it, come back to it — the board updates the moment someone's calendar changes, so the plan you're looking at is always the current one.</p>
+            <ul class="mp-mockup-list">
+                <li>Colour-coded slots show who's inside working hours and who isn't</li>
+                <li>Recurring series re-optimise automatically as teams grow across regions</li>
+                <li>One click hands the final time to Calendar, Slack and email at once</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- ============ FEATURES ============ -->
+    <section class="mp-section mp-features" id="features">
+        <div class="mp-section-head">
+            <span class="mp-eyebrow"><span class="dot"></span>Capabilities</span>
+            <h2 class="serif">Built for teams that never share a working day</h2>
+            <p>Tap a card to see what's underneath. Every feature here exists because a distributed team asked for it.</p>
+        </div>
+        <div class="mp-feature-grid" id="feature-grid">
+            <div class="mp-flip"><div class="mp-flip-inner">
+                <div class="mp-flip-face mp-flip-front"><h3>Time-zone fairness score</h3><span class="tap">Tap to see how</span></div>
+                <div class="mp-flip-face mp-flip-back"><span class="lbl">How it works</span><p>Every candidate slot gets scored on how many attendees it pushes outside 8am–7pm local time — the invite goes out only once a fair slot is found.</p></div>
+            </div></div>
+            <div class="mp-flip"><div class="mp-flip-inner">
+                <div class="mp-flip-face mp-flip-front"><h3>Auto-generated briefs</h3><span class="tap">Tap to see how</span></div>
+                <div class="mp-flip-face mp-flip-back"><span class="lbl">How it works</span><p>MeetPlus pulls the thread's open questions and last decisions into a one-page brief, sent in each attendee's own language and time zone.</p></div>
+            </div></div>
+            <div class="mp-flip"><div class="mp-flip-inner">
+                <div class="mp-flip-face mp-flip-front"><h3>Calendar sync</h3><span class="tap">Tap to see how</span></div>
+                <div class="mp-flip-face mp-flip-back"><span class="lbl">How it works</span><p>Google Calendar and Outlook stay two-way synced, so a change made anywhere is reflected everywhere within seconds.</p></div>
+            </div></div>
+            <div class="mp-flip"><div class="mp-flip-inner">
+                <div class="mp-flip-face mp-flip-front"><h3>Recurring series intelligence</h3><span class="tap">Tap to see how</span></div>
+                <div class="mp-flip-face mp-flip-back"><span class="lbl">How it works</span><p>As a recurring meeting's attendee list changes across quarters, MeetPlus quietly proposes a better slot instead of leaving a stale one in place.</p></div>
+            </div></div>
+            <div class="mp-flip"><div class="mp-flip-inner">
+                <div class="mp-flip-face mp-flip-front"><h3>Single sign-on</h3><span class="tap">Tap to see how</span></div>
+                <div class="mp-flip-face mp-flip-back"><span class="lbl">How it works</span><p>SAML and OIDC are supported out of the box, with audit logs and regional data residency for enterprise rollouts.</p></div>
+            </div></div>
+            <div class="mp-flip"><div class="mp-flip-inner">
+                <div class="mp-flip-face mp-flip-front"><h3>Fallback windows</h3><span class="tap">Tap to see how</span></div>
+                <div class="mp-flip-face mp-flip-back"><span class="lbl">How it works</span><p>When no fair slot exists, MeetPlus proposes a rotation so the same people aren't always the ones staying up late.</p></div>
+            </div></div>
+        </div>
+    </section>
+
+    <!-- ============ PHOTOS ============ -->
+    <section class="mp-section" style="padding-top: 0;">
+        <div class="mp-photo-grid">
+            <figure><img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=900&q=80" alt="Team reviewing a plan around a table" loading="lazy" onerror="this.closest('figure').style.display='none'"><figcaption>Product teams, distributed</figcaption></figure>
+            <figure><img src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?auto=format&fit=crop&w=700&q=80" alt="Open office workspace" loading="lazy" onerror="this.closest('figure').style.display='none'"><figcaption>Support, following the sun</figcaption></figure>
+            <figure><img src="https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=700&q=80" alt="Colleagues in a discussion" loading="lazy" onerror="this.closest('figure').style.display='none'"><figcaption>Sales, always on call</figcaption></figure>
+        </div>
+    </section>
+
+    <!-- ============ TESTIMONIALS ============ -->
+    <section class="mp-section">
+        <div class="mp-section-head" style="margin:0 auto 36px; text-align:center;">
+            <span class="mp-eyebrow"><span class="dot"></span>Trusted by teams</span>
+            <h2 class="serif">Teams across time zones, on the record</h2>
+        </div>
+        <div class="mp-testi-stage" id="testi-stage">
+            <div class="mp-testi-slide active">
+                <q>We used to lose a full day just agreeing on when to talk. Now the invite just arrives with a time that works.</q>
+                <div class="mp-testi-who"><b>Ananya Rao</b> · Ops Lead, Kaveri Labs</div>
             </div>
-            
-            <button onclick="auth('login')" class="btn-shine w-full bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-2xl font-bold text-lg shadow-2xl shadow-blue-500/20 active:scale-95">
-                Sign In
-            </button>
-            
-            <p class="text-gray-400 text-sm mt-6">
-                Don't have an account? 
-                <button onclick="toggle()" class="text-white font-bold hover:underline">Sign Up</button>
-            </p>
+            <div class="mp-testi-slide">
+                <q>Our support team spans four continents. The fairness score is the first tool that's actually kept that honest.</q>
+                <div class="mp-testi-who"><b>Marcus Webb</b> · Head of Support, Northstar Freight</div>
+            </div>
+            <div class="mp-testi-slide">
+                <q>The brief that lands before the call means nobody opens a meeting by asking what it's about.</q>
+                <div class="mp-testi-who"><b>Ishaan Mehta</b> · Founder, Verve Studio</div>
+            </div>
         </div>
+        <div class="mp-testi-dots" id="testi-dots"></div>
+    </section>
 
-        <div id="signup-box" class="hidden space-y-5">
-            <input id="s-name" type="text" placeholder="Full Name" class="w-full bg-black/30 border border-white/10 p-4 rounded-2xl text-white outline-none">
-            <input id="s-email" type="email" placeholder="Email Address" class="w-full bg-black/30 border border-white/10 p-4 rounded-2xl text-white outline-none">
-            <input id="s-pass" type="password" placeholder="Password" class="w-full bg-black/30 border border-white/10 p-4 rounded-2xl text-white outline-none">
-            
-            <button onclick="auth('signup')" class="btn-shine w-full bg-purple-600 hover:bg-purple-500 text-white py-4 rounded-2xl font-bold text-lg shadow-2xl shadow-purple-500/20 active:scale-95">
-                Create Account
-            </button>
-            
-            <p class="text-gray-400 text-sm mt-6">
-                Already member? 
-                <button onclick="toggle()" class="text-white font-bold hover:underline">Log In</button>
-            </p>
+    <!-- ============ GLOBAL / LIVE CLOCKS ============ -->
+    <section class="mp-section" id="global" style="padding-top:0;">
+        <div class="mp-section-head">
+            <span class="mp-eyebrow"><span class="dot"></span>Coverage</span>
+            <h2 class="serif">Wherever your team is, it's already accounted for</h2>
+            <p>These are live — the same clock MeetPlus checks before it ever proposes a time.</p>
         </div>
+        <div class="mp-global-grid" id="global-grid"></div>
+    </section>
 
-        <div class="mt-10 flex items-center justify-center gap-2 text-gray-500">
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M2.166 4.9L10 .303l7.834 4.597v4.442c0 5.148-3.346 9.873-7.834 11.358-4.488-1.485-7.834-6.21-7.834-11.358V4.9z" clip-rule="evenodd"></path></svg>
-            <span class="text-[10px] tracking-widest font-medium uppercase">End-to-End Encrypted</span>
+    <!-- ============ CTA BAND ============ -->
+    <div class="mp-cta-band">
+        <div>
+            <h2 class="serif">Stop negotiating time zones by hand.</h2>
+            <p>Set up your first fair meeting in under two minutes.</p>
         </div>
+        <a href="#auth" class="mp-btn-dark" style="background:var(--brass); color:var(--ink) !important;">Create your account</a>
     </div>
 
-    <script>
-        // Entrance Animation
-        gsap.to("#login-card", { duration: 1.5, opacity: 1, y: 0, ease: "expo.out" });
-        gsap.to("#hero-bg", { duration: 20, scale: 1, repeat: -1, yoyo: true, ease: "sine.inOut" });
+    <!-- ============ AUTH CARD ============ -->
+    <section class="mp-auth-section" id="auth">
+        <div class="mp-auth-card">
 
-        // Background movement based on mouse
-        document.addEventListener('mousemove', (e) => {
-            const moveX = (e.clientX - window.innerWidth/2) / 50;
-            const moveY = (e.clientY - window.innerHeight/2) / 50;
-            gsap.to("#hero-bg", { x: moveX, y: moveY, duration: 1 });
+            <div class="brand-panel">
+                <div>
+                    <div class="flex items-center gap-3 mb-10">
+                        <svg class="mark" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="17" cy="17" r="16" stroke="#B8925A" stroke-width="1.2"/>
+                            <path d="M9 17L17 9L25 17L17 25L9 17Z" stroke="#E9E7E0" stroke-width="1.2"/>
+                            <circle cx="17" cy="17" r="2.2" fill="#B8925A"/>
+                        </svg>
+                        <span class="wordmark">MeetPlus</span>
+                    </div>
+
+                    <div class="brand-head">
+                        <h1>Every time zone, one meeting time.</h1>
+                        <p>MeetPlus reads your team's calendars, proposes the slot that costs the fewest people sleep, and briefs everyone before they sit down.</p>
+                    </div>
+
+                    <div class="agenda">
+                        <p class="agenda-label">Today, resolved automatically</p>
+                        <div class="agenda-row"><span class="agenda-time">09:00</span><span class="agenda-title">Product sync</span><span class="agenda-city">London</span></div>
+                        <div class="agenda-row"><span class="agenda-time">13:30</span><span class="agenda-title">Board review</span><span class="agenda-city">New York</span></div>
+                        <div class="agenda-row"><span class="agenda-time">21:00</span><span class="agenda-title">Sprint planning</span><span class="agenda-city">Singapore</span></div>
+                    </div>
+                </div>
+
+                <div class="brand-foot">
+                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 2L17 5V9.5C17 13.6 14 16.9 10 18C6 16.9 3 13.6 3 9.5V5L10 2Z" stroke="#B8925A" stroke-width="1.2"/>
+                    </svg>
+                    <span>Single sign-on, audit logs and data residency controls included on every enterprise plan.</span>
+                </div>
+            </div>
+
+            <div class="form-panel">
+                <div class="form-wrap" id="form-wrap">
+
+                    <div class="tabs" id="tabs">
+                        <button type="button" class="tab-btn active" id="tab-login" onclick="switchPane('login')">Sign in</button>
+                        <button type="button" class="tab-btn" id="tab-signup" onclick="switchPane('signup')">Create account</button>
+                        <span class="tab-indicator" id="tab-indicator"></span>
+                    </div>
+
+                    <div id="login-box" class="pane active">
+                        <button onclick="authGoogle()" class="btn-google">
+                            <svg viewBox="0 0 24 24" width="18" height="18" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                            Continue with Google
+                        </button>
+                        <div class="divider"><div class="line"></div><span>or sign in with email</span><div class="line"></div></div>
+                        <div class="field-group"><label class="field-label" for="l-email">Work email</label><input id="l-email" type="email" placeholder="you@company.com" class="field"></div>
+                        <div class="field-group"><label class="field-label" for="l-pass">Password</label><input id="l-pass" type="password" placeholder="Enter your password" class="field"></div>
+                        <button onclick="authEmail('login')" class="btn-primary">Sign in</button>
+                        <p class="switch-line">New to MeetPlus? <button type="button" onclick="switchPane('signup')">Create an account</button></p>
+                    </div>
+
+                    <div id="signup-box" class="pane">
+                        <button onclick="authGoogle()" class="btn-google">
+                            <svg viewBox="0 0 24 24" width="18" height="18" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                            Sign up with Google
+                        </button>
+                        <div class="divider"><div class="line"></div><span>or sign up with email</span><div class="line"></div></div>
+                        <div class="field-group"><label class="field-label" for="s-name">Full name</label><input id="s-name" type="text" placeholder="Jordan Blake" class="field"></div>
+                        <div class="field-group"><label class="field-label" for="s-email">Work email</label><input id="s-email" type="email" placeholder="you@company.com" class="field"></div>
+                        <div class="field-group"><label class="field-label" for="s-pass">Password</label><input id="s-pass" type="password" placeholder="At least 8 characters" class="field"></div>
+                        <button onclick="authEmail('signup')" class="btn-primary">Create account</button>
+                        <p class="switch-line">Already have an account? <button type="button" onclick="switchPane('login')">Sign in</button></p>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ============ FOOTER ============ -->
+    <footer class="mp-footer">
+        <span>© 2026 MeetPlus. Built in India.</span>
+        <span>Privacy · Terms · Status</span>
+    </footer>
+
+    <!-- UI animation + tab switching -->
+    <script>
+        gsap.set("#form-wrap", { y: 14 });
+        gsap.to("#form-wrap", { duration: 1, opacity: 1, y: 0, ease: "power3.out", delay: 0.15 });
+        gsap.from(".brand-panel > div > *", { duration: 0.9, opacity: 0, y: 12, stagger: 0.08, ease: "power2.out", delay: 0.05 });
+
+        function positionIndicator(btn) {
+            const tabs = document.getElementById('tabs');
+            const indicator = document.getElementById('tab-indicator');
+            const tabsRect = tabs.getBoundingClientRect();
+            const btnRect = btn.getBoundingClientRect();
+            gsap.to(indicator, { duration: 0.35, width: btnRect.width, x: btnRect.left - tabsRect.left, ease: "power2.inOut" });
+        }
+
+        window.switchPane = function(which) {
+            const loginBox = document.getElementById('login-box');
+            const signupBox = document.getElementById('signup-box');
+            const tabLogin = document.getElementById('tab-login');
+            const tabSignup = document.getElementById('tab-signup');
+            const showLogin = which === 'login';
+            loginBox.classList.toggle('active', showLogin);
+            signupBox.classList.toggle('active', !showLogin);
+            tabLogin.classList.toggle('active', showLogin);
+            tabSignup.classList.toggle('active', !showLogin);
+            gsap.fromTo(showLogin ? loginBox : signupBox, { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.35, ease: "power2.out" });
+            positionIndicator(showLogin ? tabLogin : tabSignup);
+        };
+
+        window.toggle = function() {
+            const showingLogin = document.getElementById('login-box').classList.contains('active');
+            switchPane(showingLogin ? 'signup' : 'login');
+        };
+
+        window.addEventListener('load', () => positionIndicator(document.getElementById('tab-login')));
+    </script>
+
+    <!-- ADVANCED AUTHENTICATION LOGIC (Firebase + Postgres Fallback) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import {
+            getAuth,
+            signInWithPopup,
+            GoogleAuthProvider,
+            createUserWithEmailAndPassword,
+            signInWithEmailAndPassword,
+            updateProfile
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCWxdYhYrD7WCdZgPyCMlYu66pEqWIUjco",
+            authDomain: "meeting-59370.firebaseapp.com",
+            databaseURL: "https://meeting-59370-default-rtdb.firebaseio.com",
+            projectId: "meeting-59370",
+            appId: "1:657721129946:web:c6461df2c99b4d8b9a1ee3"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const googleProvider = new GoogleAuthProvider();
+
+        const saveUserAndRedirect = (user, customName = null) => {
+            const userData = { name: customName || user.displayName || user.email.split('@')[0], email: user.email, uid: user.uid };
+            localStorage.setItem('meet_user', JSON.stringify(userData));
+            window.location.href = 'dashboard.html';
+        };
+
+        window.authGoogle = async function() {
+            try {
+                const result = await signInWithPopup(auth, googleProvider);
+                saveUserAndRedirect(result.user);
+            } catch (error) {
+                console.error("Google Auth Error:", error);
+                alert("Google Sign-In Failed: " + error.message);
+            }
+        };
+
+        window.authEmail = async function(type) {
+            try {
+                if (type === 'signup') {
+                    const name = document.getElementById('s-name').value;
+                    const email = document.getElementById('s-email').value;
+                    const pass = document.getElementById('s-pass').value;
+                    if (!name || !email || !pass) return alert("Please fill all fields!");
+
+                    const result = await createUserWithEmailAndPassword(auth, email, pass);
+                    await updateProfile(result.user, { displayName: name });
+
+                    try {
+                        await fetch('/api/signup', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ name, email, password: pass })
+                        });
+                    } catch(e) { console.log("Postgres sync skipped", e); }
+
+                    saveUserAndRedirect(result.user, name);
+                } else {
+                    const email = document.getElementById('l-email').value;
+                    const pass = document.getElementById('l-pass').value;
+                    if (!email || !pass) return alert("Please enter email and password!");
+
+                    try {
+                        const result = await signInWithEmailAndPassword(auth, email, pass);
+                        saveUserAndRedirect(result.user);
+                    } catch (firebaseError) {
+                        console.log("Not found in Firebase. Checking PostgreSQL fallback...");
+                        try {
+                            const res = await fetch('/api/login', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ email, password: pass })
+                            });
+                            const data = await res.json();
+                            if(data.success) {
+                                const pgUser = { displayName: data.user.name, email: data.user.email, uid: data.user.id || Math.random().toString(36).substr(2, 9) };
+                                saveUserAndRedirect(pgUser, data.user.name);
+                            } else {
+                                alert("Invalid email or password.");
+                            }
+                        } catch(pgError) {
+                            alert("Authentication Server Error. Please try again.");
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error("Auth Error:", error);
+                if(error.code === 'auth/email-already-in-use') alert("This email is already registered. Please Login.");
+                else alert("Authentication Failed: " + error.message);
+            }
+        };
+    </script>
+
+    <!-- ============ LANDING PAGE INTERACTIONS ============ -->
+    <script>
+        gsap.registerPlugin(ScrollTrigger);
+
+        /* ---- hero load-in ---- */
+        gsap.timeline()
+            .from(".mp-eyebrow", { opacity: 0, y: 10, duration: 0.5, ease: "power2.out" })
+            .from("#hero-h1", { opacity: 0, y: 16, duration: 0.7, ease: "power3.out" }, "-=0.25")
+            .from(".mp-hero .lede", { opacity: 0, y: 12, duration: 0.6, ease: "power2.out" }, "-=0.4")
+            .from(".mp-hero-ctas a", { opacity: 0, y: 10, duration: 0.5, stagger: 0.08, ease: "power2.out" }, "-=0.35")
+            .from("#hero-carousel", { opacity: 0, scale: 0.94, duration: 0.8, ease: "back.out(1.4)" }, "-=0.6");
+
+        /* ---- hero image carousel: real team photos, one per world region ---- */
+        const carouselSlides = [
+            { url: "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=800&q=80", city: "Bengaluru", tz: "Asia/Kolkata" },
+            { url: "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?auto=format&fit=crop&w=800&q=80", city: "London", tz: "Europe/London" },
+            { url: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=800&q=80", city: "New York", tz: "America/New_York" },
+            { url: "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=800&q=80", city: "Singapore", tz: "Asia/Singapore" },
+            { url: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80", city: "Dubai", tz: "Asia/Dubai" }
+        ];
+        const track = document.getElementById('carousel-track');
+        const dotsWrap = document.getElementById('carousel-dots');
+        carouselSlides.forEach((s, i) => {
+            const slide = document.createElement('div');
+            slide.className = 'mp-slide' + (i === 0 ? ' active' : '');
+            slide.innerHTML = `<img src="${s.url}" alt="Team in ${s.city}" loading="${i === 0 ? 'eager' : 'lazy'}">
+                <div class="mp-slide-caption"><div class="city serif">${s.city}</div><div class="meta"><span class="pip"></span><span class="ctime" data-tz="${s.tz}">--:--</span> local time</div></div>`;
+            slide.querySelector('img').onerror = function() { slide.remove(); };
+            track.appendChild(slide);
+
+            const dot = document.createElement('button');
+            if (i === 0) dot.classList.add('active');
+            dot.addEventListener('click', () => showCarousel(i));
+            dotsWrap.appendChild(dot);
         });
 
-        function toggle() {
-            const login = document.getElementById('login-box');
-            const signup = document.getElementById('signup-box');
-            
-            gsap.to(".glass-container", { duration: 0.4, rotateY: 360, ease: "power2.inOut" });
-
-            setTimeout(() => {
-                login.classList.toggle('hidden');
-                signup.classList.toggle('hidden');
-            }, 200);
+        let carouselIndex = 0;
+        function showCarousel(i) {
+            const slides = track.querySelectorAll('.mp-slide');
+            const dots = dotsWrap.querySelectorAll('button');
+            if (!slides.length) return;
+            slides[carouselIndex] && slides[carouselIndex].classList.remove('active');
+            dots[carouselIndex] && dots[carouselIndex].classList.remove('active');
+            carouselIndex = i % slides.length;
+            slides[carouselIndex].classList.add('active');
+            dots[carouselIndex] && dots[carouselIndex].classList.add('active');
         }
+        setInterval(() => showCarousel(carouselIndex + 1), 3800);
 
-        async function auth(type) {
-            // Humne aapki logic functionality ko touch nahi kiya hai
-            const endpoint = type === 'login' ? '/api/login' : '/api/signup';
-            const payload = type === 'login' 
-                ? { email: document.getElementById('l-email').value, password: document.getElementById('l-pass').value }
-                : { name: document.getElementById('s-name').value, email: document.getElementById('s-email').value, password: document.getElementById('s-pass').value };
+        /* ---- stats count-up on scroll ---- */
+        document.querySelectorAll('.mp-stat .num').forEach(el => {
+            const target = parseFloat(el.dataset.count);
+            const suffix = el.dataset.suffix || "";
+            const obj = { val: 0 };
+            ScrollTrigger.create({
+                trigger: el, start: "top 85%", once: true,
+                onEnter: () => gsap.to(obj, { val: target, duration: 1.6, ease: "power2.out", onUpdate: () => el.textContent = Math.round(obj.val).toLocaleString() + suffix })
+            });
+        });
 
-            try {
-                const res = await fetch(endpoint, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const data = await res.json();
+        /* ---- how-it-works steps stagger in ---- */
+        gsap.from(".mp-step", { scrollTrigger: { trigger: ".mp-steps", start: "top 80%" }, opacity: 0, y: 24, duration: 0.7, stagger: 0.15, ease: "power2.out" });
 
-                if(data.success) {
-                    localStorage.setItem('meet_user', JSON.stringify(data.user));
-                    window.location.href = 'dashboard.html';
-                } else {
-                    alert(data.error || "Authentication Failed");
-                }
-            } catch(e) { console.error(e); alert("Server Error"); }
+        /* ---- 3D device: tilt with mouse ---- */
+        const device = document.getElementById('device');
+        const stage = document.querySelector('.mp-mockup-stage');
+        stage.addEventListener('mousemove', e => {
+            const r = stage.getBoundingClientRect();
+            const px = (e.clientX - r.left) / r.width - 0.5;
+            const py = (e.clientY - r.top) / r.height - 0.5;
+            gsap.to(device, { rotateY: 8 - px * 26, rotateX: 8 + py * 18, duration: 0.4, ease: "power2.out" });
+        });
+        stage.addEventListener('mouseleave', () => gsap.to(device, { rotateY: -14, rotateX: 8, duration: 0.6, ease: "power2.out" }));
+        gsap.from(".mp-device", { scrollTrigger: { trigger: ".mp-mockup", start: "top 75%" }, opacity: 0, y: 40, duration: 0.9, ease: "power3.out" });
+        gsap.from(".mp-mockup-copy > *", { scrollTrigger: { trigger: ".mp-mockup", start: "top 75%" }, opacity: 0, y: 20, duration: 0.7, stagger: 0.1, ease: "power2.out" });
+
+        /* ---- feature flip cards ---- */
+        document.querySelectorAll('.mp-flip').forEach(card => card.addEventListener('click', () => card.classList.toggle('is-flipped')));
+        gsap.from(".mp-flip", { scrollTrigger: { trigger: "#feature-grid", start: "top 82%" }, opacity: 0, y: 26, duration: 0.6, stagger: 0.08, ease: "power2.out" });
+
+        gsap.from(".mp-photo-grid figure", { scrollTrigger: { trigger: ".mp-photo-grid", start: "top 85%" }, opacity: 0, y: 24, duration: 0.7, stagger: 0.1, ease: "power2.out" });
+
+        /* ---- testimonials carousel ---- */
+        const slides = document.querySelectorAll('.mp-testi-slide');
+        const testiDotsWrap = document.getElementById('testi-dots');
+        let testiIndex = 0;
+        slides.forEach((_, i) => {
+            const dot = document.createElement('button');
+            if (i === 0) dot.classList.add('active');
+            dot.addEventListener('click', () => showTesti(i));
+            testiDotsWrap.appendChild(dot);
+        });
+        function showTesti(i) {
+            slides[testiIndex].classList.remove('active');
+            testiDotsWrap.children[testiIndex].classList.remove('active');
+            testiIndex = i;
+            slides[testiIndex].classList.add('active');
+            testiDotsWrap.children[testiIndex].classList.add('active');
+            gsap.fromTo(slides[testiIndex], { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" });
         }
+        setInterval(() => showTesti((testiIndex + 1) % slides.length), 5000);
+
+        /* ---- live world clock grid + carousel caption clocks ---- */
+        const globalCities = [
+            { name: "Bengaluru", tz: "Asia/Kolkata" },
+            { name: "Mumbai", tz: "Asia/Kolkata" },
+            { name: "London", tz: "Europe/London" },
+            { name: "New York", tz: "America/New_York" },
+            { name: "Singapore", tz: "Asia/Singapore" },
+            { name: "Dubai", tz: "Asia/Dubai" }
+        ];
+        const grid = document.getElementById('global-grid');
+        globalCities.forEach(c => {
+            const cell = document.createElement('div');
+            cell.className = 'mp-city';
+            cell.dataset.tz = c.tz;
+            cell.innerHTML = `<div class="name">${c.name}</div><div class="time">--:--:--</div>`;
+            grid.appendChild(cell);
+        });
+
+        function tickClocks() {
+            document.querySelectorAll('.mp-city[data-tz]').forEach(city => {
+                const t = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: city.dataset.tz }).format(new Date());
+                city.querySelector('.time').textContent = t;
+            });
+            document.querySelectorAll('.ctime[data-tz]').forEach(el => {
+                const t = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: el.dataset.tz }).format(new Date());
+                el.textContent = t;
+            });
+        }
+        tickClocks();
+        setInterval(tickClocks, 1000);
+
+        gsap.from(".mp-city", { scrollTrigger: { trigger: "#global-grid", start: "top 85%" }, opacity: 0, y: 16, duration: 0.5, stagger: 0.06, ease: "power2.out" });
     </script>
 </body>
 </html>

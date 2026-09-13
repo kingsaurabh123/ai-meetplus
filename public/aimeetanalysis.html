@@ -1,106 +1,451 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>MeetPlus | AI Meeting Analysis</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MeetPlus — Meeting analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap');
+
+        :root {
+            --bg: #FAF8F4;
+            --surface: #FFFFFF;
+            --surface-2: #F1EEE6;
+            --text: #1B2333;
+            --text-dim: #6E7686;
+            --line: rgba(27, 35, 51, 0.12);
+            --topbar: #0A0E1A;
+            --topbar-2: #121A2B;
+            --topbar-text: #F5F3EE;
+            --brass: #B8925A;
+            --brass-deep: #93713F;
+            --brass-soft: rgba(184, 146, 90, 0.14);
+            --good: #5C7A5A;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: 'IBM Plex Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+        .serif { font-family: 'Source Serif 4', serif; }
+        .mono { font-family: 'IBM Plex Mono', monospace; }
+
+        .topbar {
+            background: linear-gradient(180deg, var(--topbar), var(--topbar-2));
+            color: var(--topbar-text);
+            padding: 16px 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        .topbar::after {
+            content: '';
+            position: absolute; inset: 0;
+            background: radial-gradient(600px 80px at 15% 0%, rgba(184,146,90,0.16), transparent 70%);
+            pointer-events: none;
+        }
+        .topbar-inner {
+            max-width: 880px; margin: 0 auto;
+            display: flex; align-items: center; justify-content: space-between;
+            position: relative;
+        }
+        .wordmark { font-family: 'Source Serif 4', serif; font-size: 1.02rem; color: #F2F0EA; display: flex; align-items: center; gap: 8px; }
+        .wordmark .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--brass); box-shadow: 0 0 0 0 rgba(184,146,90,0.5); animation: pulse-dot 2.4s ease-out infinite; }
+        @keyframes pulse-dot {
+            0% { box-shadow: 0 0 0 0 rgba(184,146,90,0.45); }
+            70% { box-shadow: 0 0 0 7px rgba(184,146,90,0); }
+            100% { box-shadow: 0 0 0 0 rgba(184,146,90,0); }
+        }
+        .back-btn {
+            display: flex; align-items: center; gap: 8px;
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12);
+            color: var(--topbar-text); padding: 8px 14px; border-radius: 9px;
+            font-size: 0.85rem; cursor: pointer; transition: background 0.2s, border-color 0.2s;
+        }
+        .back-btn:hover { background: rgba(255,255,255,0.1); border-color: rgba(184,146,90,0.4); }
+
+        .page { max-width: 880px; margin: 0 auto; padding: 40px 20px 80px; }
+
+        .report-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
+        .report-head h1 { font-family: 'Source Serif 4', serif; font-weight: 500; font-size: 1.9rem; margin: 0 0 6px; }
+        .report-head .meta { font-size: 0.82rem; color: var(--text-dim); }
+        .head-actions { display: flex; gap: 8px; }
+        .ghost-btn {
+            background: var(--surface); border: 1px solid var(--line); color: var(--text);
+            padding: 8px 14px; border-radius: 9px; font-size: 0.83rem; cursor: pointer;
+            display: flex; align-items: center; gap: 6px; transition: border-color 0.2s, transform 0.15s;
+        }
+        .ghost-btn:hover { border-color: var(--brass); }
+        .ghost-btn:active { transform: scale(0.96); }
+        .ghost-btn.spinning svg { animation: spin 0.9s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Listen button + mini equalizer */
+        #listen-btn.loading #listen-icon { animation: pulse-scale 0.9s ease-in-out infinite; }
+        @keyframes pulse-scale { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+        .eq { display: none; align-items: flex-end; gap: 2px; height: 12px; margin-left: 2px; }
+        #listen-btn.playing .eq { display: flex; }
+        #listen-btn.playing #listen-icon { display: none; }
+        .eq i { display: block; width: 2.5px; background: var(--brass); border-radius: 1px; animation: eq-bounce 0.8s ease-in-out infinite; }
+        .eq i:nth-child(1) { height: 40%; animation-delay: 0s; }
+        .eq i:nth-child(2) { height: 100%; animation-delay: 0.15s; }
+        .eq i:nth-child(3) { height: 60%; animation-delay: 0.3s; }
+        .eq i:nth-child(4) { height: 80%; animation-delay: 0.45s; }
+        @keyframes eq-bounce { 0%,100% { transform: scaleY(0.3); } 50% { transform: scaleY(1); } }
+        #listen-btn.error { border-color: #C0605A; color: #C0605A; }
+
+        .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 30px; }
+        .stat-card {
+            background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px;
+            position: relative; overflow: hidden;
+        }
+        .stat-card::before {
+            content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+            background: var(--brass); transform: scaleY(0); transform-origin: bottom; transition: transform 0.5s ease;
+        }
+        .stat-card.in::before { transform: scaleY(1); }
+        .stat-card .label { font-size: 0.76rem; color: var(--text-dim); margin-bottom: 8px; }
+        .stat-card .value { font-family: 'Source Serif 4', serif; font-size: 1.6rem; }
+        .stat-card .sub { font-size: 0.76rem; color: var(--text-dim); margin-top: 4px; }
+        .spark { display: flex; align-items: flex-end; gap: 3px; height: 22px; margin-top: 10px; }
+        .spark i { display: block; width: 7px; border-radius: 2px 2px 0 0; background: var(--surface-2); transform: scaleY(0); transform-origin: bottom; }
+        .spark i.h { background: var(--brass); }
+
+        .panel {
+            background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 26px 28px; margin-bottom: 18px;
+            opacity: 0; transform: translateY(10px);
+        }
+        .panel h3 { font-family: 'Source Serif 4', serif; font-weight: 500; font-size: 1.05rem; margin: 0 0 10px; color: var(--text); display: flex; align-items: center; gap: 8px; }
+        .panel h3 svg { color: var(--brass); flex-shrink: 0; }
+        .panel p { font-size: 0.92rem; line-height: 1.65; color: #3B4354; margin: 0; }
+
+        .conclusion {
+            border-left: 3px solid var(--brass);
+            padding-left: 16px;
+            font-family: 'Source Serif 4', serif;
+            font-size: 1.05rem;
+            color: var(--text);
+            margin: 26px 0 6px;
+            opacity: 0; transform: translateY(10px);
+        }
+
+        .footer-note { display: flex; justify-content: space-between; align-items: center; font-size: 0.76rem; color: var(--text-dim); margin-top: 20px; flex-wrap: wrap; gap: 8px; }
+
+        .state-box { text-align: center; padding: 70px 20px; color: var(--text-dim); }
+        .state-box svg { color: var(--brass); margin-bottom: 14px; }
+        .retry-btn { margin-top: 14px; background: var(--topbar); color: var(--topbar-text); border: none; padding: 9px 20px; border-radius: 9px; font-size: 0.84rem; cursor: pointer; transition: transform 0.15s; }
+        .retry-btn:active { transform: scale(0.96); }
+
+        /* Skeleton loader */
+        .skel-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 30px; }
+        .skel-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; height: 92px; }
+        .skel-line { height: 10px; border-radius: 5px; background: linear-gradient(90deg, var(--surface-2) 25%, #E7E2D6 37%, var(--surface-2) 63%); background-size: 400% 100%; animation: shimmer 1.4s ease infinite; }
+        .skel-line.w60 { width: 60%; margin-bottom: 12px; }
+        .skel-line.w40 { width: 40%; height: 18px; margin-bottom: 8px; }
+        .skel-line.w80 { width: 80%; }
+        .skel-panel { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 26px 28px; margin-bottom: 18px; }
+        @keyframes shimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+
+        .degraded-note {
+            background: var(--brass-soft); border: 1px solid var(--brass);
+            color: #6B4E23; padding: 10px 14px; border-radius: 10px;
+            font-size: 0.82rem; margin-bottom: 22px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+            opacity: 0;
+        }
+        .degraded-note button { background: none; border: 1px solid #6B4E23; color: #6B4E23; padding: 5px 12px; border-radius: 7px; font-size: 0.78rem; cursor: pointer; transition: background 0.2s; }
+        .degraded-note button:hover { background: rgba(107,78,35,0.1); }
+
+        @media (max-width: 640px) {
+            .stat-grid, .skel-grid { grid-template-columns: 1fr; }
+            .report-head { flex-direction: column; }
+        }
+        @media print {
+            .topbar, .head-actions, .degraded-note { display: none !important; }
+            body { background: #fff; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+        }
+    </style>
 </head>
+<body>
 
-<body class="min-h-screen bg-slate-950 text-slate-100 p-8">
-
-  <div class="max-w-4xl mx-auto">
-    <!-- HEADER -->
-    <div class="flex justify-between items-center mb-8">
-      <div>
-        <h1 class="text-3xl font-extrabold tracking-tight">
-          AI<span class="text-blue-500">.ANALYSIS</span>
-        </h1>
-        <p id="meetId" class="text-xs text-slate-400 mt-1 font-mono">
-          SESSION LOADING...
-        </p>
-      </div>
-
-      <button onclick="history.back()"
-        class="px-4 py-2 text-xs font-bold rounded-xl bg-white/5 hover:bg-white/10 border border-white/10">
-        ⬅ BACK
-      </button>
+    <div class="topbar">
+        <div class="topbar-inner">
+            <div class="wordmark"><span class="dot"></span>MeetPlus</div>
+            <button class="back-btn" onclick="history.back()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                Back to report
+            </button>
+        </div>
     </div>
 
-    <!-- STATUS -->
-    <div id="status"
-      class="mb-6 p-4 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-400 text-sm">
-      🤖 AI is analyzing the meeting...
+    <div class="page" id="main-card">
+
+        <div class="report-head">
+            <div>
+                <h1>Meeting analysis</h1>
+                <div class="meta" id="meet-id">Loading…</div>
+            </div>
+            <div class="head-actions">
+                <button class="ghost-btn" onclick="window.print()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                    Print
+                </button>
+                <button class="ghost-btn" id="refresh-btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                    Regenerate
+                </button>
+                <button class="ghost-btn" id="listen-btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="listen-icon"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>
+                    <span id="listen-label">Listen</span>
+                    <span class="eq" id="listen-eq"><i></i><i></i><i></i><i></i></span>
+                </button>
+            </div>
+        </div>
+
+        <div id="body-content">
+            <div id="loader" class="state-box">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                <p>Analyzing meeting telemetry…</p>
+            </div>
+        </div>
+
     </div>
 
-    <!-- AI RESULT -->
-    <div id="aiBox"
-      class="hidden glass p-8 rounded-2xl bg-white/5 border border-white/10">
-      <h2 class="text-lg font-bold mb-4 text-blue-400">
-        Quantum Intelligence Summary
-      </h2>
+    <script>
+        gsap.from("#main-card", { duration: 0.7, opacity: 0, y: 12, ease: "power2.out" });
 
-      <div id="aiContent"
-        class="prose prose-invert max-w-none text-sm">
-      </div>
+        const urlParams = new URLSearchParams(window.location.search);
+        const meetId = urlParams.get('id');
 
-      <p id="modelUsed"
-        class="mt-6 text-[10px] text-slate-500 font-mono">
-      </p>
-    </div>
-  </div>
+        function esc(str) {
+            const d = document.createElement('div');
+            d.textContent = str ?? '';
+            return d.innerHTML;
+        }
 
-<script>
-  app.get('/api/ai-report/:id', async (req, res) => {
-  try {
-    const meeting = await Meeting.findOne({
-      meetingId: { $regex: `^${req.params.id}$`, $options: "i" }
-    });
+        function skeleton() {
+            document.getElementById('body-content').innerHTML = `
+                <div class="skel-grid">
+                    <div class="skel-card"><div class="skel-line w40"></div><div class="skel-line w60"></div></div>
+                    <div class="skel-card"><div class="skel-line w40"></div><div class="skel-line w60"></div></div>
+                    <div class="skel-card"><div class="skel-line w40"></div><div class="skel-line w60"></div></div>
+                </div>
+                <div class="skel-panel"><div class="skel-line w40"></div><div class="skel-line w80"></div></div>
+                <div class="skel-panel"><div class="skel-line w40"></div><div class="skel-line w80"></div></div>
+                <div class="skel-panel"><div class="skel-line w40"></div><div class="skel-line w80"></div></div>
+            `;
+        }
 
-    if (!meeting) {
-      return res.status(404).json({ error: "Meeting not found" });
-    }
+        function renderError(message, opts = {}) {
+            document.getElementById('body-content').innerHTML = `
+                <div class="state-box">
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#B8925A" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <p>${esc(message)}</p>
+                    ${opts.retry ? '<button class="retry-btn" onclick="loadReport(true)">Try again</button>' : ''}
+                </div>`;
+            gsap.from('.state-box', { duration: 0.5, opacity: 0, y: 8, ease: 'power2.out' });
+        }
 
-    const modelName = await getWorkingModel();
-    if (!modelName) throw new Error("No Gemini model available");
+        // Animate a number counting up, e.g. for "Overall attention: 82%"
+        function animateCount(el, target, suffix = '') {
+            const obj = { val: 0 };
+            gsap.to(obj, {
+                val: target, duration: 1.1, ease: 'power2.out',
+                onUpdate: () => { el.textContent = Math.round(obj.val) + suffix; }
+            });
+        }
 
-    const prompt = `
-Analyze this meeting data:
-${JSON.stringify(meeting.participants || [])}
+        function renderReport(data, opts = {}) {
+            const c = data.computed || {};
+            const ai = data.ai || null;
 
-Write a professional HTML report using <p> and <b>.
-Mention:
-• Engagement leader
-• Overall attention level
-• Emotional environment
-`;
+            document.getElementById('meet-id').textContent = `Session ${data.meetingId || meetId}`;
 
-    const aiRes = await axios.post(
-      `https://generativelanguage.googleapis.com/v1beta/${modelName}:generateContent?key=${GEMINI_KEY}`,
-      { contents: [{ parts: [{ text: prompt }] }] }
-    );
+            const spread = c.distribution || { high: 0, medium: 0, low: 0 };
+            const sparkTotal = Math.max(spread.high + spread.medium + spread.low, 1);
+            const sparkBar = (n, cls) => `<i class="${cls}" data-h="${Math.max((n / sparkTotal) * 100, 6)}"></i>`;
 
-    const aiText =
-      aiRes.data?.candidates?.[0]?.content?.parts?.[0]?.text
-      || "<p><b>AI Insight:</b> Not enough participant data to analyze.</p>";
+            let html = '';
 
-    res.json({
-      modelUsed: modelName,
-      meeting,
-      aiAnalysis: aiText
-    });
+            if (opts.degraded) {
+                html += `
+                    <div class="degraded-note" id="degraded">
+                        <span>The AI narrative couldn't be generated, so this report shows computed metrics only.</span>
+                        <button onclick="loadReport(true)">Retry AI narrative</button>
+                    </div>`;
+            }
 
-  } catch (err) {
-    console.error("🔥 AI ERROR:", err.response?.data || err.message);
-    res.status(500).json({
-      error: "AI analysis failed",
-      details: err.response?.data || err.message
-    });
-  }
-});
+            html += `
+                <div class="stat-grid">
+                    <div class="stat-card" id="card-attn">
+                        <div class="label">Overall attention</div>
+                        <div class="value"><span id="val-attn">0%</span></div>
+                        <div class="sub">Across ${c.totalParticipants ?? 0} participant${c.totalParticipants === 1 ? '' : 's'}</div>
+                    </div>
+                    <div class="stat-card" id="card-lead">
+                        <div class="label">Engagement leader</div>
+                        <div class="value">${c.topPerformer ? esc(c.topPerformer.name) : '—'}</div>
+                        <div class="sub">${c.topPerformer ? '<span id="val-lead">0</span>% average attention' : 'No participant data'}</div>
+                    </div>
+                    <div class="stat-card" id="card-spread">
+                        <div class="label">Engagement spread</div>
+                        <div class="value"><span id="val-high">0</span> high</div>
+                        <div class="sub">${spread.medium} medium · ${spread.low} low</div>
+                        <div class="spark">
+                            ${sparkBar(spread.high, 'h')}${sparkBar(spread.medium, '')}${sparkBar(spread.low, '')}
+                        </div>
+                    </div>
+                </div>`;
 
-</script>
+            if (ai) {
+                html += `
+                    <div class="panel" id="panel-summary">
+                        <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>Summary</h3>
+                        <p>${esc(ai.summary)}</p>
+                    </div>
+                    <div class="panel" id="panel-engagement">
+                        <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>Engagement</h3>
+                        <p>${esc(ai.engagementNote)}</p>
+                    </div>
+                    <div class="panel" id="panel-tone">
+                        <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/></svg>Emotional tone</h3>
+                        <p>${esc(ai.emotionalTone)}</p>
+                    </div>
+                    <p class="conclusion" id="panel-conclusion">${esc(ai.conclusion)}</p>
+                `;
+            }
 
+            html += `
+                <div class="footer-note">
+                    <span>${ai ? 'AI narrative generated for this session' : 'Showing computed metrics only'}</span>
+                    <span>${new Date(data.generatedAt || Date.now()).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                </div>`;
+
+            document.getElementById('body-content').innerHTML = html;
+
+            // One orchestrated reveal sequence, not scattered per-card effects
+            const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
+
+            if (opts.degraded) {
+                tl.to('#degraded', { opacity: 1, duration: 0.4 });
+            }
+
+            ['card-attn', 'card-lead', 'card-spread'].forEach((id, i) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    tl.fromTo(el, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.45 }, i * 0.08)
+                      .call(() => el.classList.add('in'), null, i * 0.08 + 0.1);
+                }
+            });
+
+            tl.call(() => {
+                const attnEl = document.getElementById('val-attn');
+                if (attnEl) animateCount(attnEl, c.overallAttention ?? 0, '%');
+                const leadEl = document.getElementById('val-lead');
+                if (leadEl && c.topPerformer) animateCount(leadEl, c.topPerformer.attention);
+                const highEl = document.getElementById('val-high');
+                if (highEl) animateCount(highEl, spread.high);
+                document.querySelectorAll('.spark i').forEach(bar => {
+                    gsap.to(bar, { scaleY: (bar.dataset.h / 100), duration: 0.6, ease: 'power2.out' });
+                });
+            }, null, 0.15);
+
+            if (ai) {
+                ['panel-summary', 'panel-engagement', 'panel-tone', 'panel-conclusion'].forEach((id, i) => {
+                    tl.to('#' + id, { opacity: 1, y: 0, duration: 0.5 }, 0.35 + i * 0.12);
+                });
+            }
+        }
+
+        function loadReport(forceRefresh = false) {
+            const btn = document.getElementById('refresh-btn');
+            if (forceRefresh && btn) btn.classList.add('spinning');
+
+            skeleton();
+
+            const url = `/api/ai-report/${meetId}${forceRefresh ? '?refresh=true' : ''}`;
+
+            fetch(url)
+                .then(async res => {
+                    const data = await res.json();
+                    if (!res.ok) throw { message: data.error || 'Request failed', payload: data };
+                    return data;
+                })
+                .then(data => {
+                    if (!data.computed) {
+                        renderError('This session has no usable telemetry yet.');
+                        return;
+                    }
+                    renderReport(data, { degraded: !data.ai });
+                })
+                .catch(err => {
+                    if (err.payload && err.payload.computed) {
+                        renderReport(err.payload, { degraded: true });
+                    } else {
+                        renderError(err.message || 'Could not reach the analysis service.', { retry: true });
+                    }
+                })
+                .finally(() => {
+                    if (btn) btn.classList.remove('spinning');
+                });
+        }
+
+        // ---- Voice narration ("Listen") ----
+        let narrationAudio = null;
+        let narrationUrl = null;
+
+        function setListenState(state) {
+            const btn = document.getElementById('listen-btn');
+            const label = document.getElementById('listen-label');
+            btn.classList.remove('loading', 'playing', 'error');
+            if (state === 'loading') { btn.classList.add('loading'); label.textContent = 'Loading…'; }
+            else if (state === 'playing') { btn.classList.add('playing'); label.textContent = 'Playing'; }
+            else if (state === 'error') { btn.classList.add('error'); label.textContent = 'Unavailable'; setTimeout(() => setListenState('idle'), 2500); }
+            else { label.textContent = 'Listen'; }
+        }
+
+        async function toggleNarration() {
+            if (narrationAudio && !narrationAudio.paused) {
+                narrationAudio.pause();
+                setListenState('idle');
+                return;
+            }
+            if (narrationAudio && narrationUrl) {
+                narrationAudio.play();
+                setListenState('playing');
+                return;
+            }
+
+            setListenState('loading');
+            try {
+                const res = await fetch(`/api/report-audio/${meetId}`);
+                if (!res.ok) throw new Error('Narration unavailable');
+                const blob = await res.blob();
+                narrationUrl = URL.createObjectURL(blob);
+                narrationAudio = new Audio(narrationUrl);
+                narrationAudio.addEventListener('ended', () => setListenState('idle'));
+                narrationAudio.addEventListener('pause', () => setListenState('idle'));
+                await narrationAudio.play();
+                setListenState('playing');
+            } catch (err) {
+                setListenState('error');
+            }
+        }
+
+        if (!meetId) {
+            renderError('No meeting ID was provided.');
+        } else {
+            loadReport(false);
+            document.getElementById('refresh-btn').addEventListener('click', () => loadReport(true));
+            document.getElementById('listen-btn').addEventListener('click', toggleNarration);
+        }
+    </script>
 
 </body>
 </html>
